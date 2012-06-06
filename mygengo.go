@@ -4,14 +4,14 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strconv"
-	"time"
-	//        "net/http"
 	"strings"
-
-//        "encoding/json"
+	"time"
 )
 
 const (
@@ -59,5 +59,41 @@ func createURL(mygengo MyGengo, method string, authRequired bool,
 	}
 	s := []string{baseURL, method, "?", v.Encode()}
 	theURL = strings.Join(s, "")
-	return theURL
+	return
+}
+
+func getRequest(method string, mygengo MyGengo, authRequired bool,
+    optionalParams map[string]string) (theJSON interface{}) {
+	theURL := createURL(mygengo, method, authRequired, optionalParams)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", theURL, nil)
+	req.Header.Add("Accept", "application/json")
+	resp, err := client.Do(req)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    err = json.Unmarshal(body, &theJSON)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    return
+}
+
+func (mygengo *MyGengo) getAccountStats() interface{} {
+    return getRequest("account/stats", *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) getAccountBalance() interface{} {
+    return getRequest("account/balance", *mygengo, true, nil)
+}
+
+func main() {
 }
