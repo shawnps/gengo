@@ -95,5 +95,10 @@ func (mygengo *MyGengo) getAccountBalance() interface{} {
     return getRequest("account/balance", *mygengo, true, nil)
 }
 
+func (mygengo *MyGengo) getJobRevision(jobId int, revisionId int) interface{} {
+    method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
+    return getRequest(method, *mygengo, true, nil)
+}
+
 func main() {
 }
