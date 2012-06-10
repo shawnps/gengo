@@ -39,15 +39,20 @@ func apiSigAndCurrentTs(myGengo MyGengo) (apiSig string, timestamp string) {
 	return
 }
 
-func createURL(mygengo MyGengo, method string, authRequired bool,
-	optionalParams map[string]string) (theURL string) {
-	v := url.Values{}
+func createBaseURL(mygengo MyGengo, method string) (theURL string) {
 	var baseURL string
 	if mygengo.Sandbox {
 		baseURL = sandboxURL
 	} else {
 		baseURL = apiURL
 	}
+	theURL = baseURL + method
+    return
+}
+
+func createGetURL(mygengo MyGengo, method string, authRequired bool,
+	optionalParams map[string]string) (theURL string) {
+	v := url.Values{}
 	v.Set("api_key", mygengo.PublicKey)
 	if authRequired {
 		apiSig, currentTime := apiSigAndCurrentTs(mygengo)
@@ -57,14 +62,15 @@ func createURL(mygengo MyGengo, method string, authRequired bool,
 	for key, val := range optionalParams {
 		v.Set(key, val)
 	}
-	s := []string{baseURL, method, "?", v.Encode()}
+    baseURL := createBaseURL(mygengo, method)
+	s := []string{baseURL, "?", v.Encode()}
 	theURL = strings.Join(s, "")
 	return
 }
 
 func getRequest(method string, mygengo MyGengo, authRequired bool,
     optionalParams map[string]string) (theJSON interface{}) {
-	theURL := createURL(mygengo, method, authRequired, optionalParams)
+	theURL := createGetURL(mygengo, method, authRequired, optionalParams)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", theURL, nil)
 	req.Header.Add("Accept", "application/json")
@@ -87,17 +93,67 @@ func getRequest(method string, mygengo MyGengo, authRequired bool,
     return
 }
 
-func (mygengo *MyGengo) getAccountStats() interface{} {
+func (mygengo *MyGengo) AccountStats() interface{} {
     return getRequest("account/stats", *mygengo, true, nil)
 }
 
-func (mygengo *MyGengo) getAccountBalance() interface{} {
+func (mygengo *MyGengo) AccountBalance() interface{} {
     return getRequest("account/balance", *mygengo, true, nil)
 }
 
-func (mygengo *MyGengo) getJobRevision(jobId int, revisionId int) interface{} {
+func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) interface{} {
     method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
     return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) JobRevisions(jobId int) interface{} {
+    method := fmt.Sprintf("translate/job/%d/revisions", jobId)
+    return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) JobFeedback(jobId int) interface{} {
+    method := fmt.Sprintf("translate/job/%d/feedback", jobId)
+    return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) JobComments(jobId int) interface{} {
+    method := fmt.Sprintf("translate/job/%d/comments", jobId)
+    return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) interface{} {
+    method := fmt.Sprintf("translate/job/%d", jobId)
+    return getRequest(method, *mygengo, true, optionalParams)
+}
+
+func (mygengo *MyGengo) JobsGroup(groupId int) interface{} {
+    method := fmt.Sprintf("translate/jobs/group/%d", groupId)
+    return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) Jobs(optionalParams map[string]string) interface{} {
+    method := "translate/jobs"
+    return getRequest(method, *mygengo, true, optionalParams)
+}
+
+func (mygengo *MyGengo) JobsByIds(jobIds []int) interface{} {
+    jobIdsStrings := []string{}
+    for _, jobId := range jobIds {
+        jobIdsStrings = append(jobIdsStrings, strconv.Itoa(jobId))
+    }
+    jobIdsString := strings.Join(jobIdsStrings, ",")
+    method := fmt.Sprintf("translate/jobs/%s", jobIdsString)
+    return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) Languages() interface{} {
+    method := "translate/service/languages"
+    return getRequest(method, *mygengo, false, nil)
+}
+
+func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) interface{} {
+    method := "translate/service/language_pairs"
+    return getRequest(method, *mygengo, false, optionalParams)
 }
 
 func main() {
