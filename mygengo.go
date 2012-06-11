@@ -93,6 +93,35 @@ func getRequest(method string, mygengo MyGengo, authRequired bool,
     return
 }
 
+func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+    theURL := createBaseURL(mygengo, method)
+	apiSig, currentTime := apiSigAndCurrentTs(mygengo)
+
+    v := url.Values{}
+	v.Set("api_key", mygengo.PublicKey)
+	v.Set("api_sig", apiSig)
+	v.Set("ts", currentTime)
+    v.Set("data", data)
+
+    client := &http.Client{}
+    req, err := http.NewRequest("POST", theURL, strings.NewReader(v.Encode()))
+    req.Header.Add("Accept", "application/json")
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    resp, err := client.Do(req)
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    err = json.Unmarshal(body, &theJSON)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    return
+}
+
 func (mygengo *MyGengo) AccountStats() interface{} {
     return getRequest("account/stats", *mygengo, true, nil)
 }
@@ -154,6 +183,18 @@ func (mygengo *MyGengo) Languages() interface{} {
 func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) interface{} {
     method := "translate/service/language_pairs"
     return getRequest(method, *mygengo, false, optionalParams)
+}
+
+func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
+    method := fmt.Sprintf("translate/job/%d/comment", jobId)
+    type Comment struct {
+        Body string `json:"body"`
+    }
+    commentJSON, err := json.Marshal(Comment{Body: comment})
+    if err != nil {
+        fmt.Println(err)
+    }
+    return postRequest(method, *mygengo, string(commentJSON))
 }
 
 func main() {
