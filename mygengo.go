@@ -206,12 +206,12 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 }
 
 type ReviseAction struct {
-    Action string `json:"action"`
+    ActionType string `json:"action"`
     Comment string `json:"comment"`
 }
 
 func NewReviseAction(comment string) (reviseAction ReviseAction) {
-    reviseAction = ReviseAction{Action: "revise",
+    reviseAction = ReviseAction{ActionType: "revise",
                                 Comment: comment}
     return
 }
@@ -226,7 +226,7 @@ func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) interfac
 }
 
 type ApproveAction struct {
-    Action string `json:"action"`
+    ActionType string `json:"action"`
     Rating *int `json:"rating,omitempty"`
     ForTranslator *string `json:"for_translator,omitempty"`
     ForMyGengo *string `json:"for_mygengo,omitempty"`
@@ -234,24 +234,24 @@ type ApproveAction struct {
 }
 
 func NewApproveAction() (approveAction ApproveAction) {
-    approveAction = ApproveAction{Action: "approve"}
+    approveAction = ApproveAction{ActionType: "approve"}
     return
 }
 
-func (a *ApproveAction) addRating(rating int) {
-    a.Rating = &rating
+func (approveAction *ApproveAction) addRating(rating int) {
+    approveAction.Rating = &rating
 }
 
-func (a *ApproveAction) addForTranslator(forTranslator string) {
-    a.ForTranslator = &forTranslator
+func (approveAction *ApproveAction) addForTranslator(forTranslator string) {
+    approveAction.ForTranslator = &forTranslator
 }
 
-func (a *ApproveAction) addForMyGengo(forMyGengo string) {
-    a.ForMyGengo = &forMyGengo
+func (approveAction *ApproveAction) addForMyGengo(forMyGengo string) {
+    approveAction.ForMyGengo = &forMyGengo
 }
 
-func (a *ApproveAction) addPublic(public int) {
-    a.Public = &public
+func (approveAction *ApproveAction) addPublic(public int) {
+    approveAction.Public = &public
 }
 
 func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) interface{} {
@@ -261,6 +261,35 @@ func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) inter
         fmt.Println(err)
     }
     return putRequest(method, *mygengo, string(approveActionJSON))
+}
+
+type RejectAction struct {
+    ActionType string `json:"action"`
+    Reason string `json:"reason"`
+    Comment string `json:"comment"`
+    Captcha string `json:"captcha"`
+    FollowUp *string `json:"follow_up,omitempty"`
+}
+
+func NewRejectAction(reason string, comment string, captcha string) (rejectAction RejectAction) {
+    rejectAction = RejectAction{ActionType: "reject",
+                                Reason: reason,
+                                Comment: comment,
+                                Captcha: captcha}
+    return
+}
+
+func (rejectAction *RejectAction) addFollowUp(followUp string) {
+    rejectAction.FollowUp = &followUp
+}
+
+func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) interface{} {
+    method := fmt.Sprintf("translate/job/%d", jobId)
+    rejectActionJSON, err := json.Marshal(rejectAction)
+    if err != nil {
+        fmt.Println(err)
+    }
+    return putRequest(method, *mygengo, string(rejectActionJSON))
 }
 
 func main() {
