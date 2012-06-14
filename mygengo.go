@@ -305,16 +305,11 @@ type JobPayload struct {
     CustomData *string `json:"custom_data,omitempty"`
 }
 
-type Job struct {
-    Job JobPayload `json:"job"`
-}
-
-func NewJob(bodySrc string, lcSrc string, lcTgt string, tier string) (job Job) {
-    jobPayload := JobPayload{BodySrc: bodySrc,
+func NewJobPayload(bodySrc string, lcSrc string, lcTgt string, tier string) (jobPayload JobPayload) {
+    jobPayload = JobPayload{BodySrc: bodySrc,
                             LcSrc: lcSrc,
                             LcTgt: lcTgt,
                             Tier: tier}
-    job = Job{jobPayload}
     return
 }
 
@@ -342,14 +337,42 @@ func (jobPayload *JobPayload) addCustomData(customData string) {
     jobPayload.CustomData = &customData
 }
 
-func (mygengo *MyGengo) PostJob (job Job) interface{} {
+func (mygengo *MyGengo) PostJob(jobPayload JobPayload) interface{} {
+    type Job struct {
+        JobPayload JobPayload `json:"job"`
+    }
     method := "translate/job"
+    job := Job{JobPayload: jobPayload}
     postJobJSON, err := json.Marshal(job)
     fmt.Println(string(postJobJSON))
     if err != nil {
         fmt.Println(err)
     }
     return postRequest(method, *mygengo, string(postJobJSON))
+}
+
+type JobArray struct {
+    Jobs []JobPayload `json:"jobs"`
+    AsGroup *int `json:"as_group,omitempty"`
+}
+
+func (jobArray *JobArray) addAsGroup(asGroup int) {
+    jobArray.AsGroup = &asGroup
+}
+
+func NewJobArray(jobs []JobPayload) (jobArray JobArray) {
+    jobArray = JobArray{Jobs: jobs}
+    return
+}
+
+func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
+    method := "translate/jobs"
+    postJobsJSON, err := json.Marshal(jobArray)
+    fmt.Println(string(postJobsJSON))
+    if err != nil {
+        fmt.Println(err)
+    }
+    return postRequest(method, *mygengo, string(postJobsJSON))
 }
 
 func main() {
