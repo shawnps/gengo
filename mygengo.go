@@ -93,7 +93,7 @@ func getRequest(method string, mygengo MyGengo, authRequired bool,
     return
 }
 
-func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) (theJSON interface{}) {
     theURL := createBaseURL(mygengo, method)
 	apiSig, currentTime := apiSigAndCurrentTs(mygengo)
 
@@ -104,7 +104,7 @@ func postRequest(method string, mygengo MyGengo, data string) (theJSON interface
     v.Set("data", data)
 
     client := &http.Client{}
-    req, err := http.NewRequest("POST", theURL, strings.NewReader(v.Encode()))
+    req, err := http.NewRequest(postOrPut, theURL, strings.NewReader(v.Encode()))
     req.Header.Add("Accept", "application/json")
     req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
     resp, err := client.Do(req)
@@ -120,6 +120,14 @@ func postRequest(method string, mygengo MyGengo, data string) (theJSON interface
         return
     }
     return
+}
+
+func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+    return postOrPutRequest("POST", method, mygengo, data)
+}
+
+func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+    return postOrPutRequest("PUT", method, mygengo, data)
 }
 
 func (mygengo *MyGengo) AccountStats() interface{} {
@@ -195,6 +203,64 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
         fmt.Println(err)
     }
     return postRequest(method, *mygengo, string(commentJSON))
+}
+
+type ReviseAction struct {
+    Action string `json:"action"`
+    Comment string `json:"comment"`
+}
+
+func NewReviseAction(comment string) (reviseAction ReviseAction) {
+    reviseAction = ReviseAction{Action: "revise",
+                                Comment: comment}
+    return
+}
+
+func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) interface{} {
+    method := fmt.Sprintf("translate/job/%d", jobId)
+    reviseActionJSON, err := json.Marshal(reviseAction)
+    if err != nil {
+        fmt.Println(err)
+    }
+    return putRequest(method, *mygengo, string(reviseActionJSON))
+}
+
+type ApproveAction struct {
+    Action string `json:"action"`
+    Rating *int `json:"rating,omitempty"`
+    ForTranslator *string `json:"for_translator,omitempty"`
+    ForMyGengo *string `json:"for_mygengo,omitempty"`
+    Public *int `json:"public,omitempty"`
+}
+
+func NewApproveAction() (approveAction ApproveAction) {
+    approveAction = ApproveAction{Action: "approve"}
+    return
+}
+
+func (a *ApproveAction) addRating(rating int) {
+    a.Rating = &rating
+}
+
+func (a *ApproveAction) addForTranslator(forTranslator string) {
+    a.ForTranslator = &forTranslator
+}
+
+func (a *ApproveAction) addForMyGengo(forMyGengo string) {
+    a.ForMyGengo = &forMyGengo
+}
+
+func (a *ApproveAction) addPublic(public int) {
+    a.Public = &public
+}
+
+func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) interface{} {
+    method := fmt.Sprintf("translate/job/%d", jobId)
+    approveActionJSON, err := json.Marshal(approveAction)
+    if err != nil {
+        fmt.Println(err)
+    }
+    return putRequest(method, *mygengo, string(approveActionJSON))
 }
 
 func main() {
