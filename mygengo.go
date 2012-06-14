@@ -292,5 +292,65 @@ func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) interfac
     return putRequest(method, *mygengo, string(rejectActionJSON))
 }
 
+type JobPayload struct {
+    BodySrc string `json:"body_src"`
+    LcSrc string `json:"lc_src"`
+    LcTgt string `json:"lc_tgt"`
+    Tier string `json:"tier"`
+    Force *int `json:"force,omitempty"`
+    Comment *string `json:"comment,omitempty"`
+    UsePreferred *int `json:"use_preferred,omitempty"`
+    CallbackURL *string `json:"callback_url,omitempty"`
+    AutoApprove *int `json:"auto_approve,omitempty"`
+    CustomData *string `json:"custom_data,omitempty"`
+}
+
+type Job struct {
+    Job JobPayload `json:"job"`
+}
+
+func NewJob(bodySrc string, lcSrc string, lcTgt string, tier string) (job Job) {
+    jobPayload := JobPayload{BodySrc: bodySrc,
+                            LcSrc: lcSrc,
+                            LcTgt: lcTgt,
+                            Tier: tier}
+    job = Job{jobPayload}
+    return
+}
+
+func (jobPayload *JobPayload) addForce(force int) {
+    jobPayload.Force = &force
+}
+
+func (jobPayload *JobPayload) addComment(comment string) {
+    jobPayload.Comment = &comment
+}
+
+func (jobPayload *JobPayload) addUsePreferred(usePreferred int) {
+    jobPayload.UsePreferred = &usePreferred
+}
+
+func (jobPayload *JobPayload) addCallbackURL(callbackURL string) {
+    jobPayload.CallbackURL = &callbackURL
+}
+
+func (jobPayload *JobPayload) addAutoApprove(autoApprove int) {
+    jobPayload.AutoApprove = &autoApprove
+}
+
+func (jobPayload *JobPayload) addCustomData(customData string) {
+    jobPayload.CustomData = &customData
+}
+
+func (mygengo *MyGengo) PostJob (job Job) interface{} {
+    method := "translate/job"
+    postJobJSON, err := json.Marshal(job)
+    fmt.Println(string(postJobJSON))
+    if err != nil {
+        fmt.Println(err)
+    }
+    return postRequest(method, *mygengo, string(postJobJSON))
+}
+
 func main() {
 }
