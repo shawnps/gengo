@@ -69,17 +69,7 @@ func createGetOrDeleteURL(mygengo MyGengo, method string, authRequired bool,
 	return
 }
 
-func readAndUnmarshalResponse(getOrDelete, url string) (theJSON interface{}) {
-	client := &http.Client{}
-	req, err := http.NewRequest(getOrDelete, url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Add("Accept", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
+func readAndUnmarshalResponse(resp http.Response) (theJSON interface{}) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -92,13 +82,27 @@ func readAndUnmarshalResponse(getOrDelete, url string) (theJSON interface{}) {
 	return theJSON
 }
 
+func doGetOrDelete(getOrDelete, url string) interface{} {
+	client := &http.Client{}
+	req, err := http.NewRequest(getOrDelete, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Add("Accept", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+    return readAndUnmarshalResponse(*resp)
+}
+
 func getRequest(method string, mygengo MyGengo, authRequired bool,
 	optionalParams map[string]string) interface{} {
 	theURL := createGetOrDeleteURL(mygengo, method, authRequired, optionalParams)
-	return readAndUnmarshalResponse("GET", theURL)
+	return doGetOrDelete("GET", theURL)
 }
 
-func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) (theJSON interface{}) {
+func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) interface{} {
 	theURL := createBaseURL(mygengo, method)
 	apiSig, currentTime := apiSigAndCurrentTs(mygengo)
 
@@ -110,21 +114,13 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 
 	client := &http.Client{}
 	req, err := http.NewRequest(postOrPut, theURL, strings.NewReader(v.Encode()))
+    if err != nil {
+        log.Fatal(err)
+    }
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	err = json.Unmarshal(body, &theJSON)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	return
+    return readAndUnmarshalResponse(*resp)
 }
 
 func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
@@ -383,7 +379,7 @@ func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
 func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
-	return readAndUnmarshalResponse("DELETE", theURL)
+	return doGetOrDelete("DELETE", theURL)
 }
 
 func main() {
