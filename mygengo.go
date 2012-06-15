@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -50,7 +51,7 @@ func createBaseURL(mygengo MyGengo, method string) (theURL string) {
 	return
 }
 
-func createGetURL(mygengo MyGengo, method string, authRequired bool,
+func createGetOrDeleteURL(mygengo MyGengo, method string, authRequired bool,
 	optionalParams map[string]string) (theURL string) {
 	v := url.Values{}
 	v.Set("api_key", mygengo.PublicKey)
@@ -68,29 +69,33 @@ func createGetURL(mygengo MyGengo, method string, authRequired bool,
 	return
 }
 
-func getRequest(method string, mygengo MyGengo, authRequired bool,
-	optionalParams map[string]string) (theJSON interface{}) {
-	theURL := createGetURL(mygengo, method, authRequired, optionalParams)
+func readAndUnmarshalResponse(getOrDelete, url string) (theJSON interface{}) {
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", theURL, nil)
+	req, err := http.NewRequest(getOrDelete, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 	req.Header.Add("Accept", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 	err = json.Unmarshal(body, &theJSON)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
-	return
+	return theJSON
+}
+
+func getRequest(method string, mygengo MyGengo, authRequired bool,
+	optionalParams map[string]string) interface{} {
+	theURL := createGetOrDeleteURL(mygengo, method, authRequired, optionalParams)
+	return readAndUnmarshalResponse("GET", theURL)
 }
 
 func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) (theJSON interface{}) {
@@ -373,6 +378,12 @@ func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
 		fmt.Println(err)
 	}
 	return postRequest(method, *mygengo, string(postJobsJSON))
+}
+
+func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
+	method := fmt.Sprintf("translate/job/%d", jobId)
+	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
+	return readAndUnmarshalResponse("DELETE", theURL)
 }
 
 func main() {
