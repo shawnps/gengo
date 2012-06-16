@@ -6,10 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -93,13 +95,32 @@ func doGetOrDelete(getOrDelete, url string) interface{} {
 	if err != nil {
 		log.Fatal(err)
 	}
-    return readAndUnmarshalResponse(*resp)
+	return readAndUnmarshalResponse(*resp)
 }
 
 func getRequest(method string, mygengo MyGengo, authRequired bool,
 	optionalParams map[string]string) interface{} {
 	theURL := createGetOrDeleteURL(mygengo, method, authRequired, optionalParams)
 	return doGetOrDelete("GET", theURL)
+}
+
+func getRequestForImage(method string, mygengo MyGengo, fileName string) (err error) {
+    theURL := createGetOrDeleteURL(mygengo, method, true, nil)
+    resp, err := http.Get(theURL)
+    if err != nil {
+        return
+    }
+	defer resp.Body.Close()
+    dst, err := os.Create(fileName)
+    if err != nil {
+        return
+    }
+    defer dst.Close()
+    io.Copy(dst, resp.Body)
+	if err != nil {
+        return
+	}
+    return nil
 }
 
 func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) interface{} {
@@ -114,13 +135,13 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 
 	client := &http.Client{}
 	req, err := http.NewRequest(postOrPut, theURL, strings.NewReader(v.Encode()))
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := client.Do(req)
-    return readAndUnmarshalResponse(*resp)
+	return readAndUnmarshalResponse(*resp)
 }
 
 func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
@@ -137,6 +158,11 @@ func (mygengo *MyGengo) AccountStats() interface{} {
 
 func (mygengo *MyGengo) AccountBalance() interface{} {
 	return getRequest("account/balance", *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) JobPreview(jobId int, fileName string) error {
+    method := fmt.Sprintf("translate/job/%d/preview", jobId)
+    return getRequestForImage(method, *mygengo, fileName)
 }
 
 func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) interface{} {
@@ -201,7 +227,7 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 	}
 	commentJSON, err := json.Marshal(Comment{Body: comment})
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return postRequest(method, *mygengo, string(commentJSON))
 }
@@ -221,7 +247,7 @@ func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) interfac
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	reviseActionJSON, err := json.Marshal(reviseAction)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return putRequest(method, *mygengo, string(reviseActionJSON))
 }
@@ -259,7 +285,7 @@ func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) inter
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	approveActionJSON, err := json.Marshal(approveAction)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return putRequest(method, *mygengo, string(approveActionJSON))
 }
@@ -288,7 +314,7 @@ func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) interfac
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	rejectActionJSON, err := json.Marshal(rejectAction)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return putRequest(method, *mygengo, string(rejectActionJSON))
 }
@@ -347,7 +373,7 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) interface{} {
 	postJobJSON, err := json.Marshal(job)
 	fmt.Println(string(postJobJSON))
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return postRequest(method, *mygengo, string(postJobJSON))
 }
@@ -369,9 +395,8 @@ func NewJobArray(jobs []JobPayload) (jobArray JobArray) {
 func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
 	method := "translate/jobs"
 	postJobsJSON, err := json.Marshal(jobArray)
-	fmt.Println(string(postJobsJSON))
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return postRequest(method, *mygengo, string(postJobsJSON))
 }
