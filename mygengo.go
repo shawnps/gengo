@@ -180,46 +180,6 @@ func (mygengo *MyGengo) JobFeedback(jobId int) interface{} {
 	return getRequest(method, *mygengo, true, nil)
 }
 
-func (mygengo *MyGengo) JobComments(jobId int) interface{} {
-	method := fmt.Sprintf("translate/job/%d/comments", jobId)
-	return getRequest(method, *mygengo, true, nil)
-}
-
-func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) interface{} {
-	method := fmt.Sprintf("translate/job/%d", jobId)
-	return getRequest(method, *mygengo, true, optionalParams)
-}
-
-func (mygengo *MyGengo) JobsGroup(groupId int) interface{} {
-	method := fmt.Sprintf("translate/jobs/group/%d", groupId)
-	return getRequest(method, *mygengo, true, nil)
-}
-
-func (mygengo *MyGengo) Jobs(optionalParams map[string]string) interface{} {
-	method := "translate/jobs"
-	return getRequest(method, *mygengo, true, optionalParams)
-}
-
-func (mygengo *MyGengo) JobsByIds(jobIds []int) interface{} {
-	jobIdsStrings := []string{}
-	for _, jobId := range jobIds {
-		jobIdsStrings = append(jobIdsStrings, strconv.Itoa(jobId))
-	}
-	jobIdsString := strings.Join(jobIdsStrings, ",")
-	method := fmt.Sprintf("translate/jobs/%s", jobIdsString)
-	return getRequest(method, *mygengo, true, nil)
-}
-
-func (mygengo *MyGengo) Languages() interface{} {
-	method := "translate/service/languages"
-	return getRequest(method, *mygengo, false, nil)
-}
-
-func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) interface{} {
-	method := "translate/service/language_pairs"
-	return getRequest(method, *mygengo, false, optionalParams)
-}
-
 func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
 	type Comment struct {
@@ -230,6 +190,22 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 		log.Fatal(err)
 	}
 	return postRequest(method, *mygengo, string(commentJSON))
+}
+
+func (mygengo *MyGengo) JobComments(jobId int) interface{} {
+	method := fmt.Sprintf("translate/job/%d/comments", jobId)
+	return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
+	method := fmt.Sprintf("translate/job/%d", jobId)
+	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
+	return doGetOrDelete("DELETE", theURL)
+}
+
+func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) interface{} {
+	method := fmt.Sprintf("translate/job/%d", jobId)
+	return getRequest(method, *mygengo, true, optionalParams)
 }
 
 type ReviseAction struct {
@@ -378,6 +354,26 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) interface{} {
 	return postRequest(method, *mygengo, string(postJobJSON))
 }
 
+func (mygengo *MyGengo) JobsGroup(groupId int) interface{} {
+	method := fmt.Sprintf("translate/jobs/group/%d", groupId)
+	return getRequest(method, *mygengo, true, nil)
+}
+
+func (mygengo *MyGengo) Jobs(optionalParams map[string]string) interface{} {
+	method := "translate/jobs"
+	return getRequest(method, *mygengo, true, optionalParams)
+}
+
+func (mygengo *MyGengo) JobsByIds(jobIds []int) interface{} {
+	jobIdsStrings := []string{}
+	for _, jobId := range jobIds {
+		jobIdsStrings = append(jobIdsStrings, strconv.Itoa(jobId))
+	}
+	jobIdsString := strings.Join(jobIdsStrings, ",")
+	method := fmt.Sprintf("translate/jobs/%s", jobIdsString)
+	return getRequest(method, *mygengo, true, nil)
+}
+
 type JobArray struct {
 	Jobs    []JobPayload `json:"jobs"`
 	AsGroup *int         `json:"as_group,omitempty"`
@@ -401,19 +397,23 @@ func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
 	return postRequest(method, *mygengo, string(postJobsJSON))
 }
 
-func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
-	method := fmt.Sprintf("translate/job/%d", jobId)
-	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
-	return doGetOrDelete("DELETE", theURL)
+func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) interface{} {
+	method := "translate/service/language_pairs"
+	return getRequest(method, *mygengo, false, optionalParams)
+}
+
+func (mygengo *MyGengo) Languages() interface{} {
+	method := "translate/service/languages"
+	return getRequest(method, *mygengo, false, nil)
 }
 
 func (mygengo *MyGengo) JobsQuote(jobArray JobArray) interface{} {
-    method := "translate/service/quote"
-    jobsQuoteJSON, err := json.Marshal(jobArray)
-    if err != nil {
-        log.Fatal(err)
-    }
-    return postRequest(method, *mygengo, string(jobsQuoteJSON))
+	method := "translate/service/quote"
+	jobsQuoteJSON, err := json.Marshal(jobArray)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return postRequest(method, *mygengo, string(jobsQuoteJSON))
 }
 
 func main() {
