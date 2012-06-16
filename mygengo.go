@@ -105,22 +105,22 @@ func getRequest(method string, mygengo MyGengo, authRequired bool,
 }
 
 func getRequestForImage(method string, mygengo MyGengo, fileName string) (err error) {
-    theURL := createGetOrDeleteURL(mygengo, method, true, nil)
-    resp, err := http.Get(theURL)
-    if err != nil {
-        return
-    }
-	defer resp.Body.Close()
-    dst, err := os.Create(fileName)
-    if err != nil {
-        return
-    }
-    defer dst.Close()
-    io.Copy(dst, resp.Body)
+	theURL := createGetOrDeleteURL(mygengo, method, true, nil)
+	resp, err := http.Get(theURL)
 	if err != nil {
-        return
+		return
 	}
-    return nil
+	defer resp.Body.Close()
+	dst, err := os.Create(fileName)
+	if err != nil {
+		return
+	}
+	defer dst.Close()
+	io.Copy(dst, resp.Body)
+	if err != nil {
+		return
+	}
+	return nil
 }
 
 func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) interface{} {
@@ -161,8 +161,8 @@ func (mygengo *MyGengo) AccountBalance() interface{} {
 }
 
 func (mygengo *MyGengo) JobPreview(jobId int, fileName string) error {
-    method := fmt.Sprintf("translate/job/%d/preview", jobId)
-    return getRequestForImage(method, *mygengo, fileName)
+	method := fmt.Sprintf("translate/job/%d/preview", jobId)
+	return getRequestForImage(method, *mygengo, fileName)
 }
 
 func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) interface{} {
@@ -405,6 +405,15 @@ func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
 	return doGetOrDelete("DELETE", theURL)
+}
+
+func (mygengo *MyGengo) JobsQuote(jobArray JobArray) interface{} {
+    method := "translate/service/quote"
+    jobsQuoteJSON, err := json.Marshal(jobArray)
+    if err != nil {
+        log.Fatal(err)
+    }
+    return postRequest(method, *mygengo, string(jobsQuoteJSON))
 }
 
 func main() {
