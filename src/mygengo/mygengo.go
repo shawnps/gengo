@@ -1,4 +1,4 @@
-package main
+package mygengo
 
 import (
 	"crypto/hmac"
@@ -414,7 +414,4 @@ func (mygengo *MyGengo) JobsQuote(jobArray JobArray) interface{} {
 		log.Fatal(err)
 	}
 	return postRequest(method, *mygengo, string(jobsQuoteJSON))
-}
-
-func main() {
 }
