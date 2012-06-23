@@ -182,10 +182,10 @@ func (mygengo *MyGengo) JobFeedback(jobId int) interface{} {
 
 func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
-	type Comment struct {
+	var postComment struct {
 		Body string `json:"body"`
 	}
-	commentJSON, err := json.Marshal(Comment{Body: comment})
+	commentJSON, err := json.Marshal(postComment{Body: comment})
 	if err != nil {
 		log.Fatal(err)
 	}
