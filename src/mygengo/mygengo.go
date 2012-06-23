@@ -185,7 +185,8 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 	var postComment struct {
 		Body string `json:"body"`
 	}
-	commentJSON, err := json.Marshal(postComment{Body: comment})
+    postComment.Body = comment
+	commentJSON, err := json.Marshal(postComment)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -347,7 +348,6 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) interface{} {
 	method := "translate/job"
 	job := Job{JobPayload: jobPayload}
 	postJobJSON, err := json.Marshal(job)
-	fmt.Println(string(postJobJSON))
 	if err != nil {
 		log.Fatal(err)
 	}
