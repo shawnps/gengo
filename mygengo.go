@@ -188,8 +188,21 @@ func (mygengo *MyGengo) AccountStats() (a AccountStatsResponse) {
 	return
 }
 
-func (mygengo *MyGengo) AccountBalance() []byte {
-	return getRequest("account/balance", *mygengo, true, nil)
+type AccountBalanceResponse struct {
+	Opstat   string
+	Response struct {
+		Credits  FloatString
+		Currency *string
+	}
+}
+
+func (mygengo *MyGengo) AccountBalance() (a AccountBalanceResponse) {
+	b := getRequest("account/balance", *mygengo, true, nil)
+	err := json.Unmarshal(b, &a)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
 }
 
 func (mygengo *MyGengo) JobPreview(jobId int, fileName string) error {
