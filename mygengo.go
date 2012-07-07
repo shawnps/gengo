@@ -141,7 +141,7 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 	if err != nil {
 		log.Fatal(err)
 	}
-    var theJSON interface{}
+	var theJSON interface{}
 	err = json.Unmarshal(body, &theJSON)
 	if err != nil {
 		log.Fatal(err)
@@ -162,33 +162,33 @@ func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{
 type FloatString string
 
 func (f *FloatString) UnmarshalJSON(i interface{}) (n float64) {
-    s := i.(string)
-    n, err := strconv.ParseFloat(s, 64)
-    if err != nil {
-        log.Fatal(err)
-    }
-    return
+	s := i.(string)
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
 }
 
 type AccountStatsResponse struct {
-    Opstat      string
-    Response    struct {
-        UserSince   int     `json:"user_since"`
-        CreditsSpent    FloatString `json:"credits_spent"`
-        Currency    string
-    }
+	Opstat   string
+	Response struct {
+		UserSince    int         `json:"user_since"`
+		CreditsSpent FloatString `json:"credits_spent"`
+		Currency     string
+	}
 }
 
 func (mygengo *MyGengo) AccountStats() (a AccountStatsResponse) {
 	b := getRequest("account/stats", *mygengo, true, nil)
 	err := json.Unmarshal(b, &a)
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 	return
 }
 
-func (mygengo *MyGengo) AccountBalance() interface{} {
+func (mygengo *MyGengo) AccountBalance() []byte {
 	return getRequest("account/balance", *mygengo, true, nil)
 }
 
