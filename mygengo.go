@@ -71,20 +71,7 @@ func createGetOrDeleteURL(mygengo MyGengo, method string, authRequired bool,
 	return
 }
 
-func readAndUnmarshalResponse(resp http.Response) (theJSON interface{}) {
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = json.Unmarshal(body, &theJSON)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return theJSON
-}
-
-func doGetOrDelete(getOrDelete, url string) interface{} {
+func doGetOrDelete(getOrDelete, url string) []byte {
 	client := &http.Client{}
 	req, err := http.NewRequest(getOrDelete, url, nil)
 	if err != nil {
@@ -95,11 +82,17 @@ func doGetOrDelete(getOrDelete, url string) interface{} {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return readAndUnmarshalResponse(*resp)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+    fmt.Println(string(body))
+	return body
 }
 
 func getRequest(method string, mygengo MyGengo, authRequired bool,
-	optionalParams map[string]string) interface{} {
+	optionalParams map[string]string) []byte {
 	theURL := createGetOrDeleteURL(mygengo, method, authRequired, optionalParams)
 	return doGetOrDelete("GET", theURL)
 }
@@ -141,7 +134,20 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := client.Do(req)
-	return readAndUnmarshalResponse(*resp)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+    var theJSON interface{}
+	err = json.Unmarshal(body, &theJSON)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return theJSON
 }
 
 func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
@@ -152,8 +158,23 @@ func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{
 	return postOrPutRequest("PUT", method, mygengo, data)
 }
 
-func (mygengo *MyGengo) AccountStats() interface{} {
-	return getRequest("account/stats", *mygengo, true, nil)
+type AccountStatsResponse struct {
+	Opstat   string
+	Response struct {
+		UserSince    int     `json:"user_since"`
+		CreditsSpent string `json:"credits_spent"`
+		Currency     string
+	}
+}
+
+func (mygengo *MyGengo) AccountStats() AccountStatsResponse {
+	b := getRequest("account/stats", *mygengo, true, nil)
+    a := AccountStatsResponse{}
+	err := json.Unmarshal(b, &a)
+    if err != nil {
+        log.Fatal(err)
+    }
+	return a
 }
 
 func (mygengo *MyGengo) AccountBalance() interface{} {
