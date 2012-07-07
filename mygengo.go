@@ -87,7 +87,6 @@ func doGetOrDelete(getOrDelete, url string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-    fmt.Println(string(body))
 	return body
 }
 
@@ -158,23 +157,35 @@ func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{
 	return postOrPutRequest("PUT", method, mygengo, data)
 }
 
-type AccountStatsResponse struct {
-	Opstat   string
-	Response struct {
-		UserSince    int     `json:"user_since"`
-		CreditsSpent string `json:"credits_spent"`
-		Currency     string
-	}
+// The API returns a string for credits_spent.
+// This takes that string and convert it to a float64.
+type FloatString string
+
+func (f *FloatString) UnmarshalJSON(i interface{}) (n float64) {
+    s := i.(string)
+    n, err := strconv.ParseFloat(s, 64)
+    if err != nil {
+        log.Fatal(err)
+    }
+    return
 }
 
-func (mygengo *MyGengo) AccountStats() AccountStatsResponse {
+type AccountStatsResponse struct {
+    Opstat      string
+    Response    struct {
+        UserSince   int     `json:"user_since"`
+        CreditsSpent    FloatString `json:"credits_spent"`
+        Currency    string
+    }
+}
+
+func (mygengo *MyGengo) AccountStats() (a AccountStatsResponse) {
 	b := getRequest("account/stats", *mygengo, true, nil)
-    a := AccountStatsResponse{}
 	err := json.Unmarshal(b, &a)
     if err != nil {
         log.Fatal(err)
     }
-	return a
+	return
 }
 
 func (mygengo *MyGengo) AccountBalance() interface{} {
