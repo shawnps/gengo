@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -157,13 +158,32 @@ func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{
 	return postOrPutRequest("PUT", method, mygengo, data)
 }
 
-// The API returns a string for credits_spent.
-// This takes that string and convert it to a float64.
+// For when opstat is "error"
+type FailedResponse struct {
+	Code int
+	Msg  string
+}
+
+// The API returns strings for some things that one would expect
+// to be numbers (for example, credits_spent)
+// FloatString takes a string and converts it to a float64.
 type FloatString string
 
 func (f *FloatString) UnmarshalJSON(i interface{}) (n float64) {
 	s := i.(string)
 	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
+}
+
+// Same as FloatString, but for integers.
+type IntString string
+
+func (f *IntString) UnmarshalJSON(i interface{}) (n int64) {
+	s := i.(string)
+	n, err := strconv.ParseInt(s, 10, 0)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -177,13 +197,19 @@ type AccountStatsResponse struct {
 		CreditsSpent FloatString `json:"credits_spent"`
 		Currency     string
 	}
+	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) AccountStats() (a AccountStatsResponse) {
+func (mygengo *MyGengo) AccountStats() (a *AccountStatsResponse, err error) {
 	b := getRequest("account/stats", *mygengo, true, nil)
-	err := json.Unmarshal(b, &a)
+	err = json.Unmarshal(b, &a)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
+	}
+	if a.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", a.Err.Code, a.Err.Msg)
+		err = errors.New(e)
+		return nil, err
 	}
 	return
 }
@@ -194,13 +220,19 @@ type AccountBalanceResponse struct {
 		Credits  FloatString
 		Currency *string
 	}
+	Err *FailedResponse `json:"omitempty"`
 }
 
-func (mygengo *MyGengo) AccountBalance() (a AccountBalanceResponse) {
+func (mygengo *MyGengo) AccountBalance() (a *AccountBalanceResponse, err error) {
 	b := getRequest("account/balance", *mygengo, true, nil)
-	err := json.Unmarshal(b, &a)
+	err = json.Unmarshal(b, &a)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
+	}
+	if a.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", a.Err.Code, a.Err.Msg)
+		err = errors.New(e)
+		return nil, err
 	}
 	return
 }
@@ -210,14 +242,57 @@ func (mygengo *MyGengo) JobPreview(jobId int, fileName string) error {
 	return getRequestForImage(method, *mygengo, fileName)
 }
 
-func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) interface{} {
-	method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
-	return getRequest(method, *mygengo, true, nil)
+type JobRevisionResponse struct {
+	Opstat   string
+	Response struct {
+		Revision struct {
+			Ctime   int
+			BodyTgt *string `json:"body_tgt"`
+		}
+	}
+	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobRevisions(jobId int) interface{} {
+func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) (j *JobRevisionResponse, err error) {
+	method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
+	b := getRequest(method, *mygengo, true, nil)
+	err = json.Unmarshal(b, &j)
+	if err != nil {
+		return nil, err
+	}
+	if j.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
+}
+
+type JobRevisionsResponse struct {
+	Opstat   string
+	Response struct {
+		JobId     IntString `json:"job_id"`
+		Revisions []struct {
+			Ctime int
+			RevId IntString `json:"rev_id"`
+		}
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) JobRevisions(jobId int) (j *JobRevisionsResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/revisions", jobId)
-	return getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *mygengo, true, nil)
+	err = json.Unmarshal(b, &j)
+	if err != nil {
+		return nil, err
+	}
+	if j.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) JobFeedback(jobId int) interface{} {
