@@ -295,9 +295,30 @@ func (mygengo *MyGengo) JobRevisions(jobId int) (j *JobRevisionsResponse, err er
 	return
 }
 
-func (mygengo *MyGengo) JobFeedback(jobId int) interface{} {
+type JobFeedbackResponse struct {
+	Opstat   string
+	Response struct {
+		Feedback struct {
+			Rating        FloatString
+			ForTranslator *string `json:"for_translator"`
+		}
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) JobFeedback(jobId int) (j *JobFeedbackResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/feedback", jobId)
-	return getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *mygengo, true, nil)
+	err = json.Unmarshal(b, &j)
+	if err != nil {
+		return nil, err
+	}
+	if j.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
