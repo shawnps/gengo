@@ -193,7 +193,7 @@ func (f *IntString) UnmarshalJSON(i interface{}) (n int64) {
 type AccountStatsResponse struct {
 	Opstat   string
 	Response struct {
-		UserSince    int         `json:"user_since"`
+		UserSince    int64       `json:"user_since"`
 		CreditsSpent FloatString `json:"credits_spent"`
 		Currency     string
 	}
@@ -246,7 +246,7 @@ type JobRevisionResponse struct {
 	Opstat   string
 	Response struct {
 		Revision struct {
-			Ctime   int
+			Ctime   int64
 			BodyTgt *string `json:"body_tgt"`
 		}
 	}
@@ -273,7 +273,7 @@ type JobRevisionsResponse struct {
 	Response struct {
 		JobId     IntString `json:"job_id"`
 		Revisions []struct {
-			Ctime int
+			Ctime int64
 			RevId IntString `json:"rev_id"`
 		}
 	}
