@@ -72,7 +72,7 @@ func createGetOrDeleteURL(mygengo MyGengo, method string, authRequired bool,
 	return
 }
 
-func doGetOrDelete(getOrDelete, url string) []byte {
+func doGetOrDelete(getOrDelete, url string) (body []byte) {
 	client := &http.Client{}
 	req, err := http.NewRequest(getOrDelete, url, nil)
 	if err != nil {
@@ -84,11 +84,11 @@ func doGetOrDelete(getOrDelete, url string) []byte {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return body
+	return
 }
 
 func getRequest(method string, mygengo MyGengo, authRequired bool,
@@ -116,7 +116,7 @@ func getRequestForImage(method string, mygengo MyGengo, fileName string) (err er
 	return nil
 }
 
-func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) interface{} {
+func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) (body []byte) {
 	theURL := createBaseURL(mygengo, method)
 	apiSig, currentTime := apiSigAndCurrentTs(mygengo)
 
@@ -138,23 +138,18 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var theJSON interface{}
-	err = json.Unmarshal(body, &theJSON)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return theJSON
+	return
 }
 
-func postRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+func postRequest(method string, mygengo MyGengo, data string) []byte {
 	return postOrPutRequest("POST", method, mygengo, data)
 }
 
-func putRequest(method string, mygengo MyGengo, data string) (theJSON interface{}) {
+func putRequest(method string, mygengo MyGengo, data string) []byte {
 	return postOrPutRequest("PUT", method, mygengo, data)
 }
 
@@ -321,7 +316,14 @@ func (mygengo *MyGengo) JobFeedback(jobId int) (j *JobFeedbackResponse, err erro
 	return
 }
 
-func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
+type PostJobFeedbackResponse struct {
+	Opstat   string
+	Response struct {
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (p *PostJobFeedbackResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
 	var postComment struct {
 		Body string `json:"body"`
@@ -329,9 +331,19 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) interface{} {
 	postComment.Body = comment
 	commentJSON, err := json.Marshal(postComment)
 	if err != nil {
-		log.Fatal(err)
+        return nil, err
 	}
-	return postRequest(method, *mygengo, string(commentJSON))
+	b := postRequest(method, *mygengo, string(commentJSON))
+	err = json.Unmarshal(b, &p)
+	if err != nil {
+		return nil, err
+	}
+	if p.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", p.Err.Code, p.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) JobComments(jobId int) interface{} {
