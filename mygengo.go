@@ -317,12 +317,11 @@ func (mygengo *MyGengo) JobFeedback(jobId int) (r *JobFeedbackResponse, err erro
 }
 
 type EmptyResponse struct {
-	Opstat   string
-	Response struct{}
-	Err      *FailedResponse
+	Opstat string
+	Err    *FailedResponse
 }
 
-func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (r *EmptyResponse, err error) {
+func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (err error) {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
 	var postComment struct {
 		Body string `json:"body"`
@@ -330,17 +329,18 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (r *EmptyRespo
 	postComment.Body = comment
 	commentJSON, err := json.Marshal(postComment)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	b := postRequest(method, *mygengo, string(commentJSON))
+	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if r.Opstat == "error" {
 		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
-		return nil, err
+		return err
 	}
 	return
 }
@@ -372,18 +372,19 @@ func (mygengo *MyGengo) JobComments(jobId int) (r *JobCommentsResponse, err erro
 	return
 }
 
-func (mygengo *MyGengo) DeleteJob(jobId int) (r *EmptyResponse, err error) {
+func (mygengo *MyGengo) DeleteJob(jobId int) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
 	b := doGetOrDelete("DELETE", theURL)
+	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if r.Opstat == "error" {
 		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
-		return nil, err
+		return err
 	}
 	return
 }
@@ -438,13 +439,24 @@ func NewReviseAction(comment string) (reviseAction ReviseAction) {
 	return
 }
 
-func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) interface{} {
+func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	reviseActionJSON, err := json.Marshal(reviseAction)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	return putRequest(method, *mygengo, string(reviseActionJSON))
+	b := putRequest(method, *mygengo, string(reviseActionJSON))
+	var r EmptyResponse
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return err
+	}
+	return
 }
 
 type ApproveAction struct {
@@ -476,13 +488,24 @@ func (approveAction *ApproveAction) AddPublic(public int) {
 	approveAction.Public = &public
 }
 
-func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) interface{} {
+func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	approveActionJSON, err := json.Marshal(approveAction)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return putRequest(method, *mygengo, string(approveActionJSON))
+	b := putRequest(method, *mygengo, string(approveActionJSON))
+	var r EmptyResponse
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return err
+	}
+	return
 }
 
 type RejectAction struct {
