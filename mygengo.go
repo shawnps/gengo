@@ -215,7 +215,7 @@ type AccountBalanceResponse struct {
 		Credits  FloatString
 		Currency *string
 	}
-	Err *FailedResponse `json:"omitempty"`
+	Err *FailedResponse
 }
 
 func (mygengo *MyGengo) AccountBalance() (r *AccountBalanceResponse, err error) {
@@ -351,7 +351,7 @@ type JobCommentsResponse struct {
 		Thread []struct {
 			Author string
 			Body   string
-			Ctime  int
+			Ctime  int64
 		}
 	}
 	Err *FailedResponse
@@ -388,9 +388,43 @@ func (mygengo *MyGengo) DeleteJob(jobId int) (r *EmptyResponse, err error) {
 	return
 }
 
-func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) interface{} {
+type JobResponse struct {
+	Opstat   string
+	Response struct {
+		Job struct {
+			AutoApprove IntString `json:"auto_approve"`
+			BodySrc     string    `json:"body_src"`
+			CaptchaURL  string    `json:"captcha_url"`
+			Credits     FloatString
+			Ctime       int64
+			Currency    string
+			ETA         int
+			JobId       IntString `json:"job_id"`
+			LcSrc       string    `json:"lc_src"`
+			LcTgt       string    `json:"lc_tgt"`
+			PreviewURL  string    `json:"preview_url"`
+			Slug        IntString
+			Status      string
+			Tier        string
+			UnitCount   IntString `json:"unit_count"`
+		}
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
-	return getRequest(method, *mygengo, true, optionalParams)
+	b := getRequest(method, *mygengo, true, optionalParams)
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 type ReviseAction struct {
