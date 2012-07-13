@@ -528,13 +528,24 @@ func (rejectAction *RejectAction) AddFollowUp(followUp string) {
 	rejectAction.FollowUp = &followUp
 }
 
-func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) interface{} {
+func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	rejectActionJSON, err := json.Marshal(rejectAction)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return putRequest(method, *mygengo, string(rejectActionJSON))
+	b := putRequest(method, *mygengo, string(rejectActionJSON))
+	var r EmptyResponse
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return err
+	}
+	return
 }
 
 type JobPayload struct {
