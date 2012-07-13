@@ -195,14 +195,14 @@ type AccountStatsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) AccountStats() (a *AccountStatsResponse, err error) {
+func (mygengo *MyGengo) AccountStats() (r *AccountStatsResponse, err error) {
 	b := getRequest("account/stats", *mygengo, true, nil)
-	err = json.Unmarshal(b, &a)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if a.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", a.Err.Code, a.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -218,14 +218,14 @@ type AccountBalanceResponse struct {
 	Err *FailedResponse `json:"omitempty"`
 }
 
-func (mygengo *MyGengo) AccountBalance() (a *AccountBalanceResponse, err error) {
+func (mygengo *MyGengo) AccountBalance() (r *AccountBalanceResponse, err error) {
 	b := getRequest("account/balance", *mygengo, true, nil)
-	err = json.Unmarshal(b, &a)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if a.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", a.Err.Code, a.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -248,15 +248,15 @@ type JobRevisionResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) (j *JobRevisionResponse, err error) {
+func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) (r *JobRevisionResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
 	b := getRequest(method, *mygengo, true, nil)
-	err = json.Unmarshal(b, &j)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if j.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -275,15 +275,15 @@ type JobRevisionsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobRevisions(jobId int) (j *JobRevisionsResponse, err error) {
+func (mygengo *MyGengo) JobRevisions(jobId int) (r *JobRevisionsResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/revisions", jobId)
 	b := getRequest(method, *mygengo, true, nil)
-	err = json.Unmarshal(b, &j)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if j.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -301,29 +301,28 @@ type JobFeedbackResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobFeedback(jobId int) (j *JobFeedbackResponse, err error) {
+func (mygengo *MyGengo) JobFeedback(jobId int) (r *JobFeedbackResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/feedback", jobId)
 	b := getRequest(method, *mygengo, true, nil)
-	err = json.Unmarshal(b, &j)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if j.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", j.Err.Code, j.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
 	return
 }
 
-type PostJobFeedbackResponse struct {
+type EmptyResponse struct {
 	Opstat   string
-	Response struct {
-	}
-	Err *FailedResponse
+	Response struct{}
+	Err      *FailedResponse
 }
 
-func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (p *PostJobFeedbackResponse, err error) {
+func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (r *EmptyResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
 	var postComment struct {
 		Body string `json:"body"`
@@ -331,30 +330,62 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (p *PostJobFee
 	postComment.Body = comment
 	commentJSON, err := json.Marshal(postComment)
 	if err != nil {
-        return nil, err
+		return nil, err
 	}
 	b := postRequest(method, *mygengo, string(commentJSON))
-	err = json.Unmarshal(b, &p)
+	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
 	}
-	if p.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", p.Err.Code, p.Err.Msg)
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
 	return
 }
 
-func (mygengo *MyGengo) JobComments(jobId int) interface{} {
-	method := fmt.Sprintf("translate/job/%d/comments", jobId)
-	return getRequest(method, *mygengo, true, nil)
+type JobCommentsResponse struct {
+	Opstat   string
+	Response struct {
+		Thread []struct {
+			Author string
+			Body   string
+			Ctime  int
+		}
+	}
+	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) DeleteJob(jobId int) interface{} {
+func (mygengo *MyGengo) JobComments(jobId int) (r *JobCommentsResponse, err error) {
+	method := fmt.Sprintf("translate/job/%d/comments", jobId)
+	b := getRequest(method, *mygengo, true, nil)
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
+}
+
+func (mygengo *MyGengo) DeleteJob(jobId int) (r *EmptyResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
-	return doGetOrDelete("DELETE", theURL)
+	b := doGetOrDelete("DELETE", theURL)
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) interface{} {
@@ -395,19 +426,19 @@ func NewApproveAction() (approveAction ApproveAction) {
 	return
 }
 
-func (approveAction *ApproveAction) addRating(rating int) {
+func (approveAction *ApproveAction) AddRating(rating int) {
 	approveAction.Rating = &rating
 }
 
-func (approveAction *ApproveAction) addForTranslator(forTranslator string) {
+func (approveAction *ApproveAction) AddForTranslator(forTranslator string) {
 	approveAction.ForTranslator = &forTranslator
 }
 
-func (approveAction *ApproveAction) addForMyGengo(forMyGengo string) {
+func (approveAction *ApproveAction) AddForMyGengo(forMyGengo string) {
 	approveAction.ForMyGengo = &forMyGengo
 }
 
-func (approveAction *ApproveAction) addPublic(public int) {
+func (approveAction *ApproveAction) AddPublic(public int) {
 	approveAction.Public = &public
 }
 
@@ -436,7 +467,7 @@ func NewRejectAction(reason string, comment string, captcha string) (rejectActio
 	return
 }
 
-func (rejectAction *RejectAction) addFollowUp(followUp string) {
+func (rejectAction *RejectAction) AddFollowUp(followUp string) {
 	rejectAction.FollowUp = &followUp
 }
 
@@ -470,31 +501,31 @@ func NewJobPayload(bodySrc string, lcSrc string, lcTgt string, tier string) (job
 	return
 }
 
-func (jobPayload *JobPayload) addForce(force int) {
+func (jobPayload *JobPayload) AddForce(force int) {
 	jobPayload.Force = &force
 }
 
-func (jobPayload *JobPayload) addComment(comment string) {
+func (jobPayload *JobPayload) AddComment(comment string) {
 	jobPayload.Comment = &comment
 }
 
-func (jobPayload *JobPayload) addUsePreferred(usePreferred int) {
+func (jobPayload *JobPayload) AddUsePreferred(usePreferred int) {
 	jobPayload.UsePreferred = &usePreferred
 }
 
-func (jobPayload *JobPayload) addCallbackURL(callbackURL string) {
+func (jobPayload *JobPayload) AddCallbackURL(callbackURL string) {
 	jobPayload.CallbackURL = &callbackURL
 }
 
-func (jobPayload *JobPayload) addAutoApprove(autoApprove int) {
+func (jobPayload *JobPayload) AddAutoApprove(autoApprove int) {
 	jobPayload.AutoApprove = &autoApprove
 }
 
-func (jobPayload *JobPayload) addCustomData(customData string) {
+func (jobPayload *JobPayload) AddCustomData(customData string) {
 	jobPayload.CustomData = &customData
 }
 
-func (mygengo *MyGengo) PostJob(jobPayload JobPayload) interface{} {
+func (mygengo *MyGengo) PostJob(jobPayload JobPayload) []byte {
 	type Job struct {
 		JobPayload JobPayload `json:"job"`
 	}
@@ -532,7 +563,7 @@ type JobArray struct {
 	AsGroup *int         `json:"as_group,omitempty"`
 }
 
-func (jobArray *JobArray) addAsGroup(asGroup int) {
+func (jobArray *JobArray) AddAsGroup(asGroup int) {
 	jobArray.AsGroup = &asGroup
 }
 
