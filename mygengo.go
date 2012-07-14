@@ -691,9 +691,30 @@ func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) (r *Lang
 	return
 }
 
-func (mygengo *MyGengo) Languages() interface{} {
+type LanguagesResponse struct {
+	Opstat   string
+	Response []struct {
+		Language      string
+		Lc            string
+		LocalizedName string `json:"localized_name"`
+		UnitType      string `json:"unit_type"`
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) Languages() (r *LanguagesResponse, err error) {
 	method := "translate/service/languages"
-	return getRequest(method, *mygengo, false, nil)
+	b := getRequest(method, *mygengo, false, nil)
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) JobsQuote(jobArray JobArray) interface{} {
