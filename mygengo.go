@@ -395,6 +395,8 @@ type JobResponse struct {
 		Job struct {
 			AutoApprove IntString `json:"auto_approve"`
 			BodySrc     string    `json:"body_src"`
+			BodyTgt     string    `json:"body_tgt"`
+			CallbackURL string    `json:"callback_url"`
 			CaptchaURL  string    `json:"captcha_url"`
 			Credits     FloatString
 			Ctime       int64
@@ -403,7 +405,8 @@ type JobResponse struct {
 			JobId       IntString `json:"job_id"`
 			LcSrc       string    `json:"lc_src"`
 			LcTgt       string    `json:"lc_tgt"`
-			PreviewURL  string    `json:"preview_url"`
+			Mt          int
+			PreviewURL  string `json:"preview_url"`
 			Slug        IntString
 			Status      string
 			Tier        string
@@ -416,6 +419,7 @@ type JobResponse struct {
 func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	b := getRequest(method, *mygengo, true, optionalParams)
+    fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -593,7 +597,7 @@ func (jobPayload *JobPayload) AddCustomData(customData string) {
 	jobPayload.CustomData = &customData
 }
 
-func (mygengo *MyGengo) PostJob(jobPayload JobPayload) []byte {
+func (mygengo *MyGengo) PostJob(jobPayload JobPayload) (r *JobResponse, err error) {
 	type Job struct {
 		JobPayload JobPayload `json:"job"`
 	}
@@ -603,7 +607,18 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return postRequest(method, *mygengo, string(postJobJSON))
+    b := postRequest(method, *mygengo, string(postJobJSON))
+    fmt.Println(string(b))
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) JobsGroup(groupId int) interface{} {
