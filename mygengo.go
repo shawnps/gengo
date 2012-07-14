@@ -419,7 +419,7 @@ type JobResponse struct {
 func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	b := getRequest(method, *mygengo, true, optionalParams)
-    fmt.Println(string(b))
+	fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -607,8 +607,8 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) (r *JobResponse, err erro
 	if err != nil {
 		log.Fatal(err)
 	}
-    b := postRequest(method, *mygengo, string(postJobJSON))
-    fmt.Println(string(b))
+	b := postRequest(method, *mygengo, string(postJobJSON))
+	fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -664,9 +664,31 @@ func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
 	return postRequest(method, *mygengo, string(postJobsJSON))
 }
 
-func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) interface{} {
+type LanguagePairsResponse struct {
+	Opstat   string
+	Response []struct {
+		Currency  string
+		LcSrc     string `json:"lc_src"`
+		LcTgt     string `json:"lc_tgt"`
+		Tier      string
+		UnitPrice FloatString `json:"unit_price"`
+	}
+	Err *FailedResponse
+}
+
+func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) (r *LanguagePairsResponse, err error) {
 	method := "translate/service/language_pairs"
-	return getRequest(method, *mygengo, false, optionalParams)
+	b := getRequest(method, *mygengo, false, optionalParams)
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
 
 func (mygengo *MyGengo) Languages() interface{} {
