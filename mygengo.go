@@ -717,11 +717,34 @@ func (mygengo *MyGengo) Languages() (r *LanguagesResponse, err error) {
 	return
 }
 
-func (mygengo *MyGengo) JobsQuote(jobArray JobArray) interface{} {
+type JobsQuoteResponse struct {
+	Opstat   string
+	Response struct {
+		Jobs []struct {
+			UnitCount int `json:"unit_count"`
+			Credits   float64
+			ETA       int
+			Currency  string
+		}
+	}
+    Err *FailedResponse `json:"err,omitempty"`
+}
+
+func (mygengo *MyGengo) JobsQuote(jobArray JobArray) (r *JobsQuoteResponse, err error) {
 	method := "translate/service/quote"
 	jobsQuoteJSON, err := json.Marshal(jobArray)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return postRequest(method, *mygengo, string(jobsQuoteJSON))
+	b := postRequest(method, *mygengo, string(jobsQuoteJSON))
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		return nil, err
+	}
+	if r.Opstat == "error" {
+		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		err = errors.New(e)
+		return nil, err
+	}
+	return
 }
