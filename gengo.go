@@ -1,4 +1,4 @@
-package mygengo
+package gengo
 
 import (
 	"crypto/hmac"
@@ -19,11 +19,11 @@ import (
 )
 
 const (
-	sandboxURL = "http://api.sandbox.mygengo.com/v1.1/"
-	apiURL     = "http://api.mygengo.com/v1.1/"
+	sandboxURL = "http://api.sandbox.gengo.com/v1.1/"
+	apiURL     = "http://api.gengo.com/v1.1/"
 )
 
-type MyGengo struct {
+type Gengo struct {
 	PublicKey  string
 	PrivateKey string
 	Sandbox    bool
@@ -35,17 +35,17 @@ func hmacSha1Hex(key string, aString string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func apiSigAndCurrentTs(myGengo MyGengo) (apiSig string, timestamp string) {
+func apiSigAndCurrentTs(gengo Gengo) (apiSig string, timestamp string) {
 	now := time.Now()
 	currentTs := now.Unix()
 	timestamp = strconv.FormatInt(currentTs, 10)
-	apiSig = hmacSha1Hex(myGengo.PrivateKey, timestamp)
+	apiSig = hmacSha1Hex(gengo.PrivateKey, timestamp)
 	return
 }
 
-func createBaseURL(mygengo MyGengo, method string) (theURL string) {
+func createBaseURL(gengo Gengo, method string) (theURL string) {
 	var baseURL string
-	if mygengo.Sandbox {
+	if gengo.Sandbox {
 		baseURL = sandboxURL
 	} else {
 		baseURL = apiURL
@@ -54,19 +54,19 @@ func createBaseURL(mygengo MyGengo, method string) (theURL string) {
 	return
 }
 
-func createGetOrDeleteURL(mygengo MyGengo, method string, authRequired bool,
+func createGetOrDeleteURL(gengo Gengo, method string, authRequired bool,
 	optionalParams map[string]string) (theURL string) {
 	v := url.Values{}
-	v.Set("api_key", mygengo.PublicKey)
+	v.Set("api_key", gengo.PublicKey)
 	if authRequired {
-		apiSig, currentTime := apiSigAndCurrentTs(mygengo)
+		apiSig, currentTime := apiSigAndCurrentTs(gengo)
 		v.Set("api_sig", apiSig)
 		v.Set("ts", currentTime)
 	}
 	for key, val := range optionalParams {
 		v.Set(key, val)
 	}
-	baseURL := createBaseURL(mygengo, method)
+	baseURL := createBaseURL(gengo, method)
 	s := []string{baseURL, "?", v.Encode()}
 	theURL = strings.Join(s, "")
 	return
@@ -91,14 +91,14 @@ func doGetOrDelete(getOrDelete, url string) (body []byte) {
 	return
 }
 
-func getRequest(method string, mygengo MyGengo, authRequired bool,
+func getRequest(method string, gengo Gengo, authRequired bool,
 	optionalParams map[string]string) []byte {
-	theURL := createGetOrDeleteURL(mygengo, method, authRequired, optionalParams)
+	theURL := createGetOrDeleteURL(gengo, method, authRequired, optionalParams)
 	return doGetOrDelete("GET", theURL)
 }
 
-func getRequestForImage(method string, mygengo MyGengo, fileName string) (err error) {
-	theURL := createGetOrDeleteURL(mygengo, method, true, nil)
+func getRequestForImage(method string, gengo Gengo, fileName string) (err error) {
+	theURL := createGetOrDeleteURL(gengo, method, true, nil)
 	resp, err := http.Get(theURL)
 	if err != nil {
 		return
@@ -116,12 +116,12 @@ func getRequestForImage(method string, mygengo MyGengo, fileName string) (err er
 	return nil
 }
 
-func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data string) (body []byte) {
-	theURL := createBaseURL(mygengo, method)
-	apiSig, currentTime := apiSigAndCurrentTs(mygengo)
+func postOrPutRequest(postOrPut string, method string, gengo Gengo, data string) (body []byte) {
+	theURL := createBaseURL(gengo, method)
+	apiSig, currentTime := apiSigAndCurrentTs(gengo)
 
 	v := url.Values{}
-	v.Set("api_key", mygengo.PublicKey)
+	v.Set("api_key", gengo.PublicKey)
 	v.Set("api_sig", apiSig)
 	v.Set("ts", currentTime)
 	v.Set("data", data)
@@ -145,12 +145,12 @@ func postOrPutRequest(postOrPut string, method string, mygengo MyGengo, data str
 	return
 }
 
-func postRequest(method string, mygengo MyGengo, data string) []byte {
-	return postOrPutRequest("POST", method, mygengo, data)
+func postRequest(method string, gengo Gengo, data string) []byte {
+	return postOrPutRequest("POST", method, gengo, data)
 }
 
-func putRequest(method string, mygengo MyGengo, data string) []byte {
-	return postOrPutRequest("PUT", method, mygengo, data)
+func putRequest(method string, gengo Gengo, data string) []byte {
+	return postOrPutRequest("PUT", method, gengo, data)
 }
 
 // For when opstat is "error"
@@ -195,8 +195,8 @@ type AccountStatsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) AccountStats() (r *AccountStatsResponse, err error) {
-	b := getRequest("account/stats", *mygengo, true, nil)
+func (gengo *Gengo) AccountStats() (r *AccountStatsResponse, err error) {
+	b := getRequest("account/stats", *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -218,8 +218,8 @@ type AccountBalanceResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) AccountBalance() (r *AccountBalanceResponse, err error) {
-	b := getRequest("account/balance", *mygengo, true, nil)
+func (gengo *Gengo) AccountBalance() (r *AccountBalanceResponse, err error) {
+	b := getRequest("account/balance", *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -232,9 +232,9 @@ func (mygengo *MyGengo) AccountBalance() (r *AccountBalanceResponse, err error) 
 	return
 }
 
-func (mygengo *MyGengo) JobPreview(jobId int, fileName string) error {
+func (gengo *Gengo) JobPreview(jobId int, fileName string) error {
 	method := fmt.Sprintf("translate/job/%d/preview", jobId)
-	return getRequestForImage(method, *mygengo, fileName)
+	return getRequestForImage(method, *gengo, fileName)
 }
 
 type JobRevisionResponse struct {
@@ -248,9 +248,9 @@ type JobRevisionResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobRevision(jobId int, revisionId int) (r *JobRevisionResponse, err error) {
+func (gengo *Gengo) JobRevision(jobId int, revisionId int) (r *JobRevisionResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/revision/%d", jobId, revisionId)
-	b := getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -275,9 +275,9 @@ type JobRevisionsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobRevisions(jobId int) (r *JobRevisionsResponse, err error) {
+func (gengo *Gengo) JobRevisions(jobId int) (r *JobRevisionsResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/revisions", jobId)
-	b := getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -301,9 +301,9 @@ type JobFeedbackResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobFeedback(jobId int) (r *JobFeedbackResponse, err error) {
+func (gengo *Gengo) JobFeedback(jobId int) (r *JobFeedbackResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/feedback", jobId)
-	b := getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -321,7 +321,7 @@ type EmptyResponse struct {
 	Err    *FailedResponse
 }
 
-func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (err error) {
+func (gengo *Gengo) PostJobComment(jobId int, comment string) (err error) {
 	method := fmt.Sprintf("translate/job/%d/comment", jobId)
 	var postComment struct {
 		Body string `json:"body"`
@@ -331,7 +331,7 @@ func (mygengo *MyGengo) PostJobComment(jobId int, comment string) (err error) {
 	if err != nil {
 		return err
 	}
-	b := postRequest(method, *mygengo, string(commentJSON))
+	b := postRequest(method, *gengo, string(commentJSON))
 	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -357,9 +357,9 @@ type JobCommentsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) JobComments(jobId int) (r *JobCommentsResponse, err error) {
+func (gengo *Gengo) JobComments(jobId int) (r *JobCommentsResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d/comments", jobId)
-	b := getRequest(method, *mygengo, true, nil)
+	b := getRequest(method, *gengo, true, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -372,9 +372,9 @@ func (mygengo *MyGengo) JobComments(jobId int) (r *JobCommentsResponse, err erro
 	return
 }
 
-func (mygengo *MyGengo) DeleteJob(jobId int) (err error) {
+func (gengo *Gengo) DeleteJob(jobId int) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
-	theURL := createGetOrDeleteURL(*mygengo, method, true, nil)
+	theURL := createGetOrDeleteURL(*gengo, method, true, nil)
 	b := doGetOrDelete("DELETE", theURL)
 	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
@@ -416,9 +416,9 @@ type JobResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
+func (gengo *Gengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
-	b := getRequest(method, *mygengo, true, optionalParams)
+	b := getRequest(method, *gengo, true, optionalParams)
 	fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -443,13 +443,13 @@ func NewReviseAction(comment string) (reviseAction ReviseAction) {
 	return
 }
 
-func (mygengo *MyGengo) ReviseJob(jobId int, reviseAction ReviseAction) (err error) {
+func (gengo *Gengo) ReviseJob(jobId int, reviseAction ReviseAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	reviseActionJSON, err := json.Marshal(reviseAction)
 	if err != nil {
 		return err
 	}
-	b := putRequest(method, *mygengo, string(reviseActionJSON))
+	b := putRequest(method, *gengo, string(reviseActionJSON))
 	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -467,7 +467,7 @@ type ApproveAction struct {
 	ActionType    string  `json:"action"`
 	Rating        *int    `json:"rating,omitempty"`
 	ForTranslator *string `json:"for_translator,omitempty"`
-	ForMyGengo    *string `json:"for_mygengo,omitempty"`
+	ForGengo    *string `json:"for_gengo,omitempty"`
 	Public        *int    `json:"public,omitempty"`
 }
 
@@ -484,21 +484,21 @@ func (approveAction *ApproveAction) AddForTranslator(forTranslator string) {
 	approveAction.ForTranslator = &forTranslator
 }
 
-func (approveAction *ApproveAction) AddForMyGengo(forMyGengo string) {
-	approveAction.ForMyGengo = &forMyGengo
+func (approveAction *ApproveAction) AddForGengo(forGengo string) {
+	approveAction.ForGengo = &forGengo
 }
 
 func (approveAction *ApproveAction) AddPublic(public int) {
 	approveAction.Public = &public
 }
 
-func (mygengo *MyGengo) ApproveJob(jobId int, approveAction ApproveAction) (err error) {
+func (gengo *Gengo) ApproveJob(jobId int, approveAction ApproveAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	approveActionJSON, err := json.Marshal(approveAction)
 	if err != nil {
 		log.Fatal(err)
 	}
-	b := putRequest(method, *mygengo, string(approveActionJSON))
+	b := putRequest(method, *gengo, string(approveActionJSON))
 	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -532,13 +532,13 @@ func (rejectAction *RejectAction) AddFollowUp(followUp string) {
 	rejectAction.FollowUp = &followUp
 }
 
-func (mygengo *MyGengo) RejectJob(jobId int, rejectAction RejectAction) (err error) {
+func (gengo *Gengo) RejectJob(jobId int, rejectAction RejectAction) (err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	rejectActionJSON, err := json.Marshal(rejectAction)
 	if err != nil {
 		log.Fatal(err)
 	}
-	b := putRequest(method, *mygengo, string(rejectActionJSON))
+	b := putRequest(method, *gengo, string(rejectActionJSON))
 	var r EmptyResponse
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -597,7 +597,7 @@ func (jobPayload *JobPayload) AddCustomData(customData string) {
 	jobPayload.CustomData = &customData
 }
 
-func (mygengo *MyGengo) PostJob(jobPayload JobPayload) (r *JobResponse, err error) {
+func (gengo *Gengo) PostJob(jobPayload JobPayload) (r *JobResponse, err error) {
 	type Job struct {
 		JobPayload JobPayload `json:"job"`
 	}
@@ -607,7 +607,7 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) (r *JobResponse, err erro
 	if err != nil {
 		log.Fatal(err)
 	}
-	b := postRequest(method, *mygengo, string(postJobJSON))
+	b := postRequest(method, *gengo, string(postJobJSON))
 	fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
@@ -621,24 +621,24 @@ func (mygengo *MyGengo) PostJob(jobPayload JobPayload) (r *JobResponse, err erro
 	return
 }
 
-func (mygengo *MyGengo) JobsGroup(groupId int) interface{} {
+func (gengo *Gengo) JobsGroup(groupId int) interface{} {
 	method := fmt.Sprintf("translate/jobs/group/%d", groupId)
-	return getRequest(method, *mygengo, true, nil)
+	return getRequest(method, *gengo, true, nil)
 }
 
-func (mygengo *MyGengo) Jobs(optionalParams map[string]string) interface{} {
+func (gengo *Gengo) Jobs(optionalParams map[string]string) interface{} {
 	method := "translate/jobs"
-	return getRequest(method, *mygengo, true, optionalParams)
+	return getRequest(method, *gengo, true, optionalParams)
 }
 
-func (mygengo *MyGengo) JobsByIds(jobIds []int) interface{} {
+func (gengo *Gengo) JobsByIds(jobIds []int) interface{} {
 	jobIdsStrings := []string{}
 	for _, jobId := range jobIds {
 		jobIdsStrings = append(jobIdsStrings, strconv.Itoa(jobId))
 	}
 	jobIdsString := strings.Join(jobIdsStrings, ",")
 	method := fmt.Sprintf("translate/jobs/%s", jobIdsString)
-	return getRequest(method, *mygengo, true, nil)
+	return getRequest(method, *gengo, true, nil)
 }
 
 type JobArray struct {
@@ -655,13 +655,13 @@ func NewJobArray(jobs []JobPayload) (jobArray JobArray) {
 	return
 }
 
-func (mygengo *MyGengo) PostJobs(jobArray JobArray) interface{} {
+func (gengo *Gengo) PostJobs(jobArray JobArray) interface{} {
 	method := "translate/jobs"
 	postJobsJSON, err := json.Marshal(jobArray)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return postRequest(method, *mygengo, string(postJobsJSON))
+	return postRequest(method, *gengo, string(postJobsJSON))
 }
 
 type LanguagePairsResponse struct {
@@ -676,9 +676,9 @@ type LanguagePairsResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) LanguagePairs(optionalParams map[string]string) (r *LanguagePairsResponse, err error) {
+func (gengo *Gengo) LanguagePairs(optionalParams map[string]string) (r *LanguagePairsResponse, err error) {
 	method := "translate/service/language_pairs"
-	b := getRequest(method, *mygengo, false, optionalParams)
+	b := getRequest(method, *gengo, false, optionalParams)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -702,9 +702,9 @@ type LanguagesResponse struct {
 	Err *FailedResponse
 }
 
-func (mygengo *MyGengo) Languages() (r *LanguagesResponse, err error) {
+func (gengo *Gengo) Languages() (r *LanguagesResponse, err error) {
 	method := "translate/service/languages"
-	b := getRequest(method, *mygengo, false, nil)
+	b := getRequest(method, *gengo, false, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
@@ -730,13 +730,13 @@ type JobsQuoteResponse struct {
     Err *FailedResponse `json:"err,omitempty"`
 }
 
-func (mygengo *MyGengo) JobsQuote(jobArray JobArray) (r *JobsQuoteResponse, err error) {
+func (gengo *Gengo) JobsQuote(jobArray JobArray) (r *JobsQuoteResponse, err error) {
 	method := "translate/service/quote"
 	jobsQuoteJSON, err := json.Marshal(jobArray)
 	if err != nil {
 		log.Fatal(err)
 	}
-	b := postRequest(method, *mygengo, string(jobsQuoteJSON))
+	b := postRequest(method, *gengo, string(jobsQuoteJSON))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
