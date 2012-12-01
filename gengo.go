@@ -650,9 +650,9 @@ type LanguagePairsResponse struct {
 	Err *FailedResponse
 }
 
-func (gengo *Gengo) LanguagePairs(optionalParams map[string]string) (r *LanguagePairsResponse, err error) {
+func (gengo *Gengo) LanguagePairs() (r *LanguagePairsResponse, err error) {
 	method := "translate/service/language_pairs"
-	b := getRequest(method, *gengo, false, optionalParams)
+	b := getRequest(method, *gengo, false, nil)
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
