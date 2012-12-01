@@ -441,7 +441,7 @@ type ApproveAction struct {
 	ActionType    string  `json:"action"`
 	Rating        *int    `json:"rating,omitempty"`
 	ForTranslator *string `json:"for_translator,omitempty"`
-	ForGengo    *string `json:"for_gengo,omitempty"`
+	ForGengo      *string `json:"for_gengo,omitempty"`
 	Public        *int    `json:"public,omitempty"`
 }
 
@@ -677,7 +677,7 @@ type JobsQuoteResponse struct {
 			Currency  string
 		}
 	}
-    Err *FailedResponse `json:"err,omitempty"`
+	Err *FailedResponse `json:"err,omitempty"`
 }
 
 func (gengo *Gengo) JobsQuote(jobArray JobArray) (r *JobsQuoteResponse, err error) {
