@@ -181,7 +181,7 @@ func (gengo *Gengo) AccountStats() (r *AccountStatsResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (gengo *Gengo) AccountBalance() (r *AccountBalanceResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (gengo *Gengo) JobRevision(jobId int, revisionId int) (r *JobRevisionRespon
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (gengo *Gengo) JobRevisions(jobId int) (r *JobRevisionsResponse, err error)
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func (gengo *Gengo) JobFeedback(jobId int) (r *JobFeedbackResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func (gengo *Gengo) PostJobComment(jobId int, comment string) (err error) {
 		return err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return err
 	}
@@ -339,7 +339,7 @@ func (gengo *Gengo) JobComments(jobId int) (r *JobCommentsResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -356,7 +356,7 @@ func (gengo *Gengo) DeleteJob(jobId int) (err error) {
 		return err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return err
 	}
@@ -399,7 +399,7 @@ func (gengo *Gengo) Job(jobId int, optionalParams map[string]string) (r *JobResp
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -430,7 +430,7 @@ func (gengo *Gengo) ReviseJob(jobId int, reviseAction ReviseAction) (err error) 
 		return err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return err
 	}
@@ -479,7 +479,7 @@ func (gengo *Gengo) ApproveJob(jobId int, approveAction ApproveAction) (err erro
 		return err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return err
 	}
@@ -519,7 +519,7 @@ func (gengo *Gengo) RejectJob(jobId int, rejectAction RejectAction) (err error) 
 		return err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return err
 	}
@@ -588,7 +588,7 @@ func (gengo *Gengo) PostJob(jobPayload JobPayload) (r *JobResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -658,7 +658,7 @@ func (gengo *Gengo) LanguagePairs() (r *LanguagePairsResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -684,7 +684,7 @@ func (gengo *Gengo) Languages() (r *LanguagesResponse, err error) {
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
@@ -716,7 +716,7 @@ func (gengo *Gengo) JobsQuote(jobArray JobArray) (r *JobsQuoteResponse, err erro
 		return nil, err
 	}
 	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response.  Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
+		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
 		err = errors.New(e)
 		return nil, err
 	}
