@@ -7,12 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -95,25 +93,6 @@ func getRequest(method string, gengo Gengo, authRequired bool,
 	optionalParams map[string]string) []byte {
 	theURL := createGetOrDeleteURL(gengo, method, authRequired, optionalParams)
 	return doGetOrDelete("GET", theURL)
-}
-
-func getRequestForImage(method string, gengo Gengo, fileName string) (err error) {
-	theURL := createGetOrDeleteURL(gengo, method, true, nil)
-	resp, err := http.Get(theURL)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	dst, err := os.Create(fileName)
-	if err != nil {
-		return
-	}
-	defer dst.Close()
-	io.Copy(dst, resp.Body)
-	if err != nil {
-		return
-	}
-	return nil
 }
 
 func postOrPutRequest(postOrPut string, method string, gengo Gengo, data string) (body []byte) {
@@ -230,11 +209,6 @@ func (gengo *Gengo) AccountBalance() (r *AccountBalanceResponse, err error) {
 		return nil, err
 	}
 	return
-}
-
-func (gengo *Gengo) JobPreview(jobId int, fileName string) error {
-	method := fmt.Sprintf("translate/job/%d/preview", jobId)
-	return getRequestForImage(method, *gengo, fileName)
 }
 
 type JobRevisionResponse struct {
