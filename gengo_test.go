@@ -17,7 +17,7 @@ func TestAccountStats(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	if rsp.Opstat != "ok" {
-		t.Errorf("Account stats Opstat was not ok: %s", rsp)
+		t.Errorf("Account stats opstat was not ok: %s", rsp)
 	}
 }
 
@@ -27,7 +27,7 @@ func TestAccountBalance(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	if rsp.Opstat != "ok" {
-		t.Errorf("Account balance Opstat was not ok: %s", rsp)
+		t.Errorf("Account balance opstat was not ok: %s", rsp)
 	}
 }
 
@@ -37,6 +37,16 @@ func TestLanguagePairs(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 	if rsp.Opstat != "ok" {
-		t.Errorf("Language pairs Opstat was not ok: %s", rsp)
+		t.Errorf("Language pairs opstat was not ok: %s", rsp)
+	}
+}
+
+func TestLanguages(t *testing.T) {
+	rsp, err := gengo.Languages()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if rsp.Opstat != "ok" {
+		t.Errorf("Languages opstat was not ok: %s", rsp)
 	}
 }
