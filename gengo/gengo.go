@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	sandboxURL = "http://api.sandbox.gengo.com/v1.1/"
-	apiURL     = "http://api.gengo.com/v1.1/"
+	sandboxURL = "http://api.sandbox.mygengo.com/v2/"
+	apiURL     = "http://api.gengo.com/v2/"
 )
 
 type Gengo struct {
