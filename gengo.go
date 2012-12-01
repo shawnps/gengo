@@ -571,30 +571,6 @@ func (jobPayload *JobPayload) AddCustomData(customData string) {
 	jobPayload.CustomData = &customData
 }
 
-func (gengo *Gengo) PostJob(jobPayload JobPayload) (r *JobResponse, err error) {
-	type Job struct {
-		JobPayload JobPayload `json:"job"`
-	}
-	method := "translate/job"
-	job := Job{JobPayload: jobPayload}
-	postJobJSON, err := json.Marshal(job)
-	if err != nil {
-		log.Fatal(err)
-	}
-	b := postRequest(method, *gengo, string(postJobJSON))
-	fmt.Println(string(b))
-	err = json.Unmarshal(b, &r)
-	if err != nil {
-		return nil, err
-	}
-	if r.Opstat == "error" {
-		e := fmt.Sprintf("Failed response. Code: %d, Message: %s", r.Err.Code, r.Err.Msg)
-		err = errors.New(e)
-		return nil, err
-	}
-	return
-}
-
 func (gengo *Gengo) JobsGroup(groupId int) interface{} {
 	method := fmt.Sprintf("translate/jobs/group/%d", groupId)
 	return getRequest(method, *gengo, true, nil)
