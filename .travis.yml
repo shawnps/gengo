@@ -1,0 +1,5 @@
+language: go
+
+env:
+  global:
+    - GENGO_PUBKEY='pubkeyfortests' GENGO_PRIVKEY='privatekeyfortestuserthatcontainsonlyletters'
