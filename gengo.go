@@ -393,7 +393,6 @@ type JobResponse struct {
 func (gengo *Gengo) Job(jobId int, optionalParams map[string]string) (r *JobResponse, err error) {
 	method := fmt.Sprintf("translate/job/%d", jobId)
 	b := getRequest(method, *gengo, true, optionalParams)
-	fmt.Println(string(b))
 	err = json.Unmarshal(b, &r)
 	if err != nil {
 		return nil, err
