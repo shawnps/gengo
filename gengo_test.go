@@ -50,3 +50,16 @@ func TestLanguages(t *testing.T) {
 		t.Errorf("Languages opstat was not ok: %s", rsp)
 	}
 }
+
+func TestJobsQuote(t *testing.T) {
+	job := NewJobPayload("Testing the Gengo API with the Go client", "en", "ja", "standard")
+	job.AddForce(1)
+	jobs := NewJobArray([]JobPayload{job})
+	rsp, err := gengo.JobsQuote(jobs)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if rsp.Opstat != "ok" {
+		t.Errorf("Languages opstat was not ok: %s", rsp)
+	}
+}
